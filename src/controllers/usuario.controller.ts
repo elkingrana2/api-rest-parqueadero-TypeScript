@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/require-await */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable unused-imports/no-unused-imports */
 /* eslint-disable simple-import-sort/imports */
@@ -8,9 +9,12 @@
 /* eslint-disable prettier/prettier */
 import { Request, Response } from 'express';
 import { QueryResult } from 'pg';
+import { Boom } from '@hapi/boom';
 
 import { pool } from '../database';
-import app from '../app';
+import UsuariosService from '../services/usuario.service';
+
+const service = new UsuariosService();
 
 // obtener todos los usuarios
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
@@ -19,14 +23,8 @@ export const getUsuarios = async (
   res: Response
 ): Promise<Response> => {
   try {
-    const response: QueryResult = await pool.query(
-      'SELECT * FROM usuario ORDER BY id ASC'
-    );
-    // eslint-disable-next-line no-console
-    //console.log(response.rows);
-    //res.send('usuarios socios del parqueadero');
-
-    return res.status(200).json(response.rows);
+    const usuarios = await service.find();
+    return res.status(200).json(usuarios);
   } catch (error) {
     console.log(error);
     return res.status(500).json('Internal server error');
@@ -45,10 +43,12 @@ export const getUsuarioById = async (
       'SELECT * FROM usuario WHERE id = $1',
       [id]
     );
-    return res.json(response.rows);
+    return res.status(200).json(response.rows);
   } catch (error) {
     console.log(error);
-    return res.status(500).json('Internal server error');
+    return res.status(500).json({
+      message: 'Internal server error',
+    });
   }
 };
 
