@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/ban-types */
+/* eslint-disable prettier/prettier */
 const date = new Date();
 
 date.getHours();

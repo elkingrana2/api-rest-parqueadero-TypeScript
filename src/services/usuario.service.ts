@@ -1,18 +1,12 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable unused-imports/no-unused-imports */
 /* eslint-disable @typescript-eslint/no-useless-constructor */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable padding-line-between-statements */
-/* eslint-disable simple-import-sort/imports */
-/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-/* eslint-disable @typescript-eslint/no-empty-function */
 /* eslint-disable prettier/prettier */
-import { QueryResult } from 'pg';
-import { pool } from '../database';
+/* eslint-disable simple-import-sort/imports */
 
-import getConnection from '../configuration/postgres';
+//import sequelize from '../configuration/sequelize';
+import { Usuario, Rol } from '../entities/Usuario.entitie';
+
+import boom from '@hapi/boom';
+//import { DataSource } from 'typeorm';
 
 class UsuariosService {
   constructor() {
@@ -20,21 +14,57 @@ class UsuariosService {
     //this.find();
   }
 
-  create(data: any) {
-    const newUsuario = {};
+  async getUsuarios(): Promise<Usuario[]> {
+    const usuario = Usuario.find();
+
+    return usuario;
   }
 
-  async find() {
-    const client = await getConnection();
-    const response: QueryResult = await client.query('SELECT * FROM usuario');
-    return response.rows;
+  async getUsuarioById(idUsuario: number): Promise<Usuario> {
+    const usuario = await Usuario.findOneBy({ id: idUsuario });
+    if (!usuario) {
+      throw boom.notFound('Usuario no encontrado', { idUsuario });
+    }
+
+    return usuario;
   }
 
-  findOne() {}
+  async createUsuario(
+    nombre: string,
+    apellido: string,
+    correo: string,
+    password: string
+  ): Promise<Usuario> {
+    const usuario = new Usuario();
+    usuario.nombre = nombre;
+    usuario.apellido = apellido;
+    usuario.correo = correo;
+    usuario.password = password;
+    usuario.rol = Rol.socio;
 
-  update() {}
+    await usuario.save();
 
-  delete() {}
+    return usuario;
+  }
+
+  async updateUsuario(idUsuario: number, usuario: Usuario): Promise<Usuario> {
+    // busco el usaurio por id
+    const usuarioExistente = await this.getUsuarioById(idUsuario);
+
+    usuarioExistente.nombre = usuario.nombre;
+    usuarioExistente.apellido = usuario.apellido;
+    usuarioExistente.correo = usuario.correo;
+    usuarioExistente.password = usuario.password;
+
+    await usuarioExistente.save();
+
+    return usuarioExistente;
+  }
+
+  async deleteUsuario(idUsuario: number): Promise<void> {
+    const usuario = await this.getUsuarioById(idUsuario);
+    await usuario.remove();
+  }
 }
 
 export default UsuariosService;

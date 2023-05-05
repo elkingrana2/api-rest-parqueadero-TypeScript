@@ -7,12 +7,11 @@
 /* eslint-disable padding-line-between-statements */
 /* eslint-disable no-console */
 /* eslint-disable prettier/prettier */
-import { Request, Response } from 'express';
-import { QueryResult } from 'pg';
-import { Boom } from '@hapi/boom';
+import { Request, Response, NextFunction } from 'express';
 
-import { pool } from '../database';
 import UsuariosService from '../services/usuario.service';
+import { Usuario } from '../entities/Usuario.entitie';
+import { UsuarioResponse } from '../responses/usuario.response';
 
 const service = new UsuariosService();
 
@@ -20,35 +19,28 @@ const service = new UsuariosService();
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export const getUsuarios = async (
   req: Request,
-  res: Response
-): Promise<Response> => {
+  res: Response,
+  next: NextFunction
+) => {
   try {
-    const usuarios = await service.find();
-    return res.status(200).json(usuarios);
+    const usuarios = await service.getUsuarios();
+    return res.status(200).json({ usuarios });
   } catch (error) {
-    console.log(error);
-    return res.status(500).json('Internal server error');
+    next(error);
   }
 };
 
-// obtener un usuario por id
 export const getUsuarioById = async (
   req: Request,
-  res: Response
-): Promise<Response> => {
-  //console.log(req.params.id);
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
   try {
     const id = parseInt(req.params.id);
-    const response: QueryResult = await pool.query(
-      'SELECT * FROM usuario WHERE id = $1',
-      [id]
-    );
-    return res.status(200).json(response.rows);
+    const usuario = await service.getUsuarioById(id);
+    return res.status(200).json({ usuario });
   } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      message: 'Internal server error',
-    });
+    next(error);
   }
 };
 
@@ -56,105 +48,76 @@ export const getUsuarioById = async (
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export const createUsuario = async (
   req: Request,
-  res: Response
-): Promise<Response> => {
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { apellido, correo, nombre, password } = req.body;
 
-    // si el correo ya existe en la base de datos no se puede crear el usuario
-    const response1: QueryResult = await pool.query(
-      'SELECT * FROM usuario WHERE correo = $1',
-      [correo]
+    const usuario = await service.createUsuario(
+      nombre as string,
+      apellido as string,
+      correo as string,
+      password as string
     );
-    if (response1.rowCount > 0) {
-      return res.status(400).json('El correo ya existe');
-    }
 
-    // el rol se asigna por defecto como SOCIO
+    const usuarioResponse = new UsuarioResponse();
+    usuarioResponse.id = usuario.id;
+    usuarioResponse.nombre = usuario.nombre;
+    usuarioResponse.apellido = usuario.apellido;
+    usuarioResponse.correo = usuario.correo;
 
-    //console.log(apellido, correo, nombre, password, rol);
-    const response: QueryResult = await pool.query(
-      'INSERT INTO usuario (apellido, correo, nombre, password, rol, eliminado) VALUES ($1, $2, $3, $4, $5, false)',
-      [apellido, correo, nombre, password, 'SOCIO']
-    );
     //return res.json(response.rows);
     return res.status(200).json({
       message: 'Usuario creado correctamente',
       body: {
-        usuario: {
-          apellido,
-          correo,
-          nombre,
-        },
+        usuarioResponse,
       },
     });
   } catch (error) {
-    console.log(error);
-    return res.status(500).json('Internal server error');
+    next(error);
   }
 };
 
 // eliminar un usuario
 export const deleteUsuario = async (
   req: Request,
-  res: Response
-): Promise<Response> => {
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
   try {
     const id = parseInt(req.params.id);
 
-    // si el usuario no existe en la base de datos se indica en un mensaje
-    const response1: QueryResult = await pool.query(
-      'SELECT * FROM usuario WHERE id = $1',
-      [id]
-    );
-    if (response1.rowCount === 0) {
-      return res.status(400).json('El usuario no existe');
-    }
-
-    await pool.query('DELETE FROM usuario where id = $1', [id]);
-    return res.status(200).json(`Usuario ${id} eliminado correctamente`);
+    await service.deleteUsuario(id);
+    return res
+      .status(200)
+      .json({ message: `Usuario ${id} eliminado correctamente` });
   } catch (error) {
-    console.log(error);
-    return res.status(500).json('Internal server error');
+    next(error);
   }
 };
 
 // actualizar un usuario
 export const updateUsuario = async (
   req: Request,
-  res: Response
-): Promise<Response> => {
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
   try {
     const id = parseInt(req.params.id);
     const { apellido, correo, nombre, password } = req.body;
 
-    // si el usuario no existe en la base de datos se indica en un mensaje
-    const usuario: QueryResult = await pool.query(
-      'SELECT * FROM usuario WHERE id = $1',
-      [id]
-    );
-    if (usuario.rowCount === 0) {
-      return res.status(400).json('El usuario no existe');
-    }
+    const usuario = new Usuario();
+    usuario.nombre = nombre as string;
+    usuario.apellido = apellido as string;
+    usuario.correo = correo as string;
+    usuario.password = password as string;
 
-    // si el CORREO de USUARIO ha cambiado, verificar que no exista otro USUARIO con el mismo CORREO
-    if (usuario.rows[0].correo !== correo) {
-      const usuarioCorreo = await pool.query(
-        'SELECT * FROM usuario WHERE correo = $1',
-        [correo]
-      );
-      if (usuarioCorreo.rowCount > 0) {
-        return res.status(400).json('El correo ya existe');
-      }
-    }
-
-    await pool.query(
-      'UPDATE usuario SET apellido = $1, correo = $2, nombre = $3, password = $4, rol = $5 WHERE id = $6',
-      [apellido, correo, nombre, password, 'SOCIO', id]
-    );
-    return res.status(200).json(`Usuario ${id} actualizado correctamente`);
+    await service.updateUsuario(id, usuario);
+    return res
+      .status(200)
+      .json({ message: `Usuario ${id} actualizado correctamente` });
   } catch (error) {
-    console.log(error);
-    return res.status(500).json('Internal server error');
+    next(error);
   }
 };

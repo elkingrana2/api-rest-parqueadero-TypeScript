@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /* eslint-disable import/first */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-var-requires */
@@ -18,12 +19,16 @@ import parqueaderoRoutes from './routes/parqueadero.router';
 const cors = require('cors');
 
 // definir middleware
-import errorHandler from './middlewares/error.handler';
+const {
+  logErrors,
+  errorHandler,
+  boomErrorHandler,
+  validationErrorHandler,
+} = require('./middlewares/error.handler');
 // Create Express server
 const app = express();
 
 // global error handler
-app.use(errorHandler);
 app.use(cors());
 
 // Express configuration
@@ -42,6 +47,10 @@ router.use('/parqueaderos', parqueaderoRoutes);
 
 loadApiEndpoints(app);
 
-//app.use(logErrors);
+// Errores middleware se usan despues de las rutas
+app.use(logErrors);
+app.use(boomErrorHandler);
+app.use(validationErrorHandler);
+app.use(errorHandler);
 
 export default app;

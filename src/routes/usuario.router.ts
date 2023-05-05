@@ -3,6 +3,12 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 /* eslint-disable prettier/prettier */
 import { Router } from 'express';
+import validatorHandler from '../middlewares/validator.handler';
+
+import {
+  createUsuarioSchema,
+  getUsuarioSchema,
+} from '../schema/usuario.schema';
 
 import {
   getUsuarios,
@@ -16,10 +22,23 @@ const router = Router();
 
 // rutas de usuarios
 router.get('/', getUsuarios);
-router.get('/:id', getUsuarioById);
-router.post('/', createUsuario);
-router.put('/:id', updateUsuario);
-router.delete('/:id', deleteUsuario);
+router.get(
+  '/:id',
+  validatorHandler(getUsuarioSchema, 'params'),
+  getUsuarioById
+);
+router.post('/', validatorHandler(createUsuarioSchema, 'body'), createUsuario);
+router.put(
+  '/:id',
+  validatorHandler(getUsuarioSchema, 'params'),
+  validatorHandler(createUsuarioSchema, 'body'),
+  updateUsuario
+);
+router.delete(
+  '/:id',
+  validatorHandler(getUsuarioSchema, 'params'),
+  deleteUsuario
+);
 
 export default router;
 
