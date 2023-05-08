@@ -1,5 +1,6 @@
 /* eslint-disable prettier/prettier */
 import {
+  BaseEntity,
   Column,
   Entity,
   ManyToOne,
@@ -12,7 +13,7 @@ import { Usuario } from './Usuario.entitie';
 import { Vehiculo } from './vehiculo.entitie';
 
 @Entity()
-export class Parqueadero {
+export class Parqueadero extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -29,7 +30,7 @@ export class Parqueadero {
   espacioDisponible: number;
 
   @ManyToOne(() => Usuario, (usuario) => usuario.parqueaderos)
-  usuario: Usuario;
+  usuario: Usuario | null;
 
   @OneToMany(() => Vehiculo, (vehiculo) => vehiculo.parqueadero, {
     cascade: true,
@@ -44,17 +45,10 @@ export class Parqueadero {
   @Column({ default: false })
   eliminado: boolean;
 
-  constructor(
-    nombre: string,
-    direccion: string,
-    capacidad: number,
-    usuario: Usuario
-  ) {
-    this.nombre = nombre;
-    this.direccion = direccion;
-    this.capacidad = capacidad;
-    this.usuario = usuario;
-  }
+  // constructor() {
+  //   super();
+  //   //this.vehiculos = [];
+  // }
 
   addVehiculo(vehiculo: Vehiculo): void {
     this.vehiculos.push(vehiculo);

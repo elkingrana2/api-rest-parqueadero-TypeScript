@@ -8,6 +8,11 @@ import { Usuario, Rol } from '../entities/Usuario.entitie';
 import boom from '@hapi/boom';
 //import { DataSource } from 'typeorm';
 
+import ParqueaderoService from './parqueadero.service';
+import { Parqueadero } from '../entities/parqueadero.entitie';
+
+const parqueaderoService = new ParqueaderoService();
+
 class UsuariosService {
   constructor() {
     //this.usuarios = [];
@@ -21,7 +26,11 @@ class UsuariosService {
   }
 
   async getUsuarioById(idUsuario: number): Promise<Usuario> {
-    const usuario = await Usuario.findOneBy({ id: idUsuario });
+    const usuario = await Usuario.findOne({
+      where: { id: idUsuario },
+      relations: ['usuario'],
+    });
+    //const usuario = await Usuario.findOneBy({ id: idUsuario });
     if (!usuario) {
       throw boom.notFound('Usuario no encontrado', { idUsuario });
     }
@@ -64,6 +73,51 @@ class UsuariosService {
   async deleteUsuario(idUsuario: number): Promise<void> {
     const usuario = await this.getUsuarioById(idUsuario);
     await usuario.remove();
+  }
+
+  async agregarParqueaderoSocio(
+    idUsuario: number,
+    idParqueadero: number
+  ): Promise<Usuario | void> {
+    const usuario = await this.getUsuarioById(idUsuario);
+    const parqueadero = await parqueaderoService.getParqueaderoById(
+      idParqueadero
+    );
+
+    if (usuario.rol !== Rol.socio) {
+      throw boom.badRequest(
+        'El usuario no es un socio, no se le puede asignar un parqueadero',
+        { idUsuario }
+      );
+    }
+
+    // // verificar si ese parqueadero ya esta asignado al usuario
+    // if (parqueadero.usuario === usuario) {
+    //   throw boom.badRequest('El parqueadero ya esta asignado al usuario', {
+    //     idUsuario,
+    //   });
+    // }
+
+    // //verificar si el parqueadero ya esta asignado a otro usuario
+    // if (parqueadero.usuario != null) {
+    //   throw boom.badRequest('El parqueadero ya esta asignado a otro usuario', {
+    //     idUsuario,
+    //   });
+    // }
+
+    const parqueadero1 = await Parqueadero.findOne({
+      where: { id: 1 },
+      relations: ['usuario'],
+    });
+    if (parqueadero1) {
+      // el parqueadero ya está asociado a un usuario
+      throw boom.badRequest('El parqueadero ya esta asignado a otro usuario', {
+        idUsuario,
+      });
+    }
+
+    parqueadero.usuario = usuario;
+    await parqueadero.save();
   }
 }
 

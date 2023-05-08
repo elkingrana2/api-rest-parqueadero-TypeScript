@@ -16,6 +16,7 @@ import {
   createUsuario,
   deleteUsuario,
   updateUsuario,
+  agregarParqueaderoSocio,
 } from '../controllers/usuario.controller';
 
 const router = Router();
@@ -39,6 +40,7 @@ router.delete(
   validatorHandler(getUsuarioSchema, 'params'),
   deleteUsuario
 );
+router.put('/:idUsuario/parqueaderos/:idParqueadero', agregarParqueaderoSocio);
 
 export default router;
 

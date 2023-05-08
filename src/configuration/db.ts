@@ -16,4 +16,6 @@ export const AppDataSource = new DataSource({
   entities: [Usuario, Parqueadero, Vehiculo, Historial],
   synchronize: true,
   logging: true,
+  subscribers: [],
+  migrations: [],
 });

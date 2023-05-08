@@ -121,3 +121,22 @@ export const updateUsuario = async (
     next(error);
   }
 };
+
+// agregarParqueaderoSocio
+export const agregarParqueaderoSocio = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  try {
+    const idUsuario = parseInt(req.params.idUsuario);
+    const idParqueadero  = parseInt(req.params.idParqueadero);
+
+    await service.agregarParqueaderoSocio(idUsuario, idParqueadero);
+    return res
+      .status(200)
+      .json({ message: `Parqueadero ${idParqueadero} agregado correctamente` });
+  } catch (error) {
+    next(error);
+  }
+}

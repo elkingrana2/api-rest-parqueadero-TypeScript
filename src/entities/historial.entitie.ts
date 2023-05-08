@@ -1,11 +1,17 @@
 /* eslint-disable prettier/prettier */
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 import { Parqueadero } from './parqueadero.entitie';
 import { Vehiculo } from './vehiculo.entitie';
 
 @Entity({ name: 'Historial' })
-export class Historial {
+export class Historial extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 

@@ -1,8 +1,10 @@
+/* eslint-disable no-use-before-define */
 /* eslint-disable prettier/prettier */
 import {
   BaseEntity,
   Column,
   Entity,
+  JoinColumn,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -27,7 +29,7 @@ export class Usuario extends BaseEntity {
   @Column()
   apellido: string;
 
-  @Column()
+  @Column({ unique: true })
   correo: string;
 
   @Column()
@@ -43,6 +45,7 @@ export class Usuario extends BaseEntity {
   parqueaderos: Parqueadero[];
 
   @ManyToOne(() => Usuario, (usuario) => usuario.empleados)
+  @JoinColumn([{ name: 'jefe_id', referencedColumnName: 'id' }])
   jefe: Usuario;
 
   @OneToMany(() => Usuario, (usuario) => usuario.jefe)

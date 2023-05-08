@@ -4,48 +4,40 @@
 /* eslint-disable padding-line-between-statements */
 /* eslint-disable no-console */
 /* eslint-disable prettier/prettier */
-import { Request, Response } from 'express';
-import { QueryResult } from 'pg';
+import { NextFunction, Request, Response } from 'express';
 
-import { pool } from '../database';
+import ParqueaderoService from '../services/parqueadero.service';
+
+const service = new ParqueaderoService();
 
 // obtener todos los parqueaderos
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export const getParqueaderos = async (
   req: Request,
-  res: Response
-): Promise<Response> => {
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
   try {
-    const response: QueryResult = await pool.query(
-      'SELECT * FROM parqueadero ORDER BY id ASC'
-    );
-    // eslint-disable-next-line no-console
-    //console.log(response.rows);
-    //res.send('usuarios socios del parqueadero');
-
-    return res.status(200).json(response.rows);
+    const parqueaderos = await service.getParqueaderos();
+    return res.status(200).json({ parqueaderos });
   } catch (error) {
-    console.log(error);
-    return res.status(500).json({ message: 'Internal server Error' });
+    next(error);
   }
 };
 
 // obtener un parqueadero por id
 export const getParqueaderoById = async (
   req: Request,
-  res: Response
-): Promise<Response> => {
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
   //console.log(req.params.id);
   try {
     const id = parseInt(req.params.id);
-    const response: QueryResult = await pool.query(
-      'SELECT * FROM parqueadero WHERE id = $1',
-      [id]
-    );
-    return res.json(response.rows);
+    const parqueadero = await service.getParqueaderoById(id);
+    return res.status(200).json({ parqueadero });
   } catch (error) {
-    console.log(error);
-    return res.status(500).json({ message: 'Internal server Error' });
+    next(error);
   }
 };
 
@@ -53,118 +45,107 @@ export const getParqueaderoById = async (
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export const createParqueadero = async (
   req: Request,
-  res: Response
-): Promise<Response> => {
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
   try {
-    const { nombre, capacidad, direccion } = req.body;
+    const { nombre, direccion, capacidad } = req.body;
 
-    // si el nombre ya existe, no se puede crear
-    const parqueadero = await pool.query(
-      'SELECT * FROM parqueadero WHERE nombre = $1',
-      [nombre]
+    const parqueadero = await service.createParqueadero(
+      nombre as string,
+      direccion as string,
+      capacidad as number
     );
-    if (parqueadero.rowCount > 0) {
-      return res.status(400).json({ message: 'El parqueadero ya existe' });
-    }
-
-    // ver que la capacidad sea mayor a 0
-    if (capacidad <= 0) {
-      return res
-        .status(400)
-        .json({ message: 'La capacidad debe ser mayor a 0' });
-    }
-
-    const espacioDisponible = capacidad;
-
-    const response: QueryResult = await pool.query(
-      'INSERT INTO parqueadero (nombre, capacidad, direccion, eliminado, espacio_disponible) VALUES ($1, $2, $3, false, $4)',
-      [nombre, capacidad, direccion, espacioDisponible]
-    );
-    return res.json({
+    return res.status(200).json({
       message: 'Parqueadero creado exitosamente',
-      body: {
-        parqueadero: {
-          nombre,
-          capacidad,
-          direccion,
-        },
-      },
+      body: { parqueadero },
     });
   } catch (error) {
-    console.log(error);
-    return res.status(500).json({ message: 'Internal server Error' });
+    next(error);
   }
 };
 
 // eliminar un parqueadero
 export const deleteParqueadero = async (
   req: Request,
-  res: Response
-): Promise<Response> => {
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
   try {
     const id = parseInt(req.params.id);
-
-    // si el parqueadero no existe, no se puede eliminar
-    const parqueadero = await pool.query(
-      'SELECT * FROM parqueadero WHERE id = $1',
-      [id]
-    );
-    if (parqueadero.rowCount === 0) {
-      return res.status(400).json('El parqueadero no existe');
-    }
-
-    //'UPDATE parqueadero SET eliminado = true WHERE id = $1',
-    await pool.query('DELETE FROM parqueadero WHERE id = $1', [id]);
+    await service.deleteParqueadero(id);
     return res.status(200).json(`Parqueadero ${id} eliminado exitosamente`);
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ message: 'Internal server Error' });
+    next(error);
   }
 };
 
 // actualizar un parqueadero
 export const updateParqueadero = async (
   req: Request,
-  res: Response
-): Promise<Response> => {
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
   try {
     const id = parseInt(req.params.id);
     const { nombre, capacidad, direccion } = req.body;
 
-    // si el parqueadero no existe, no se puede actualizar
-    const parqueadero = await pool.query(
-      'SELECT * FROM parqueadero WHERE id = $1',
-      [id]
+    const parqueadero = await service.updateParqueadero(
+      id,
+      nombre as string,
+      direccion as string,
+      capacidad as number
     );
-    if (parqueadero.rowCount === 0) {
-      return res.status(400).json('El parqueadero no existe');
-    }
-
-    // si el nombre de parqueadero ha cambiado, verificar que no exista otro parqueadero con el mismo nombre
-    if (parqueadero.rows[0].nombre !== nombre) {
-      const parqueaderoNombre = await pool.query(
-        'SELECT * FROM parqueadero WHERE nombre = $1',
-        [nombre]
-      );
-      if (parqueaderoNombre.rowCount > 0) {
-        return res.status(400).json('El parqueadero ya existe');
-      }
-    }
-
-    // ver que la capacidad sea mayor a 0
-    if (capacidad <= 0) {
-      return res.status(400).json('La capacidad debe ser mayor a 0');
-    }
-
-    const espacioDisponible = capacidad;
-
-    await pool.query(
-      'UPDATE parqueadero SET nombre = $1, capacidad = $2, direccion = $3, espacio_disponible = $4 WHERE id = $5',
-      [nombre, capacidad, direccion, espacioDisponible, id]
-    );
-    return res.status(200).json(`Parqueadero ${id} actualizado exitosamente`);
+    return res
+      .status(200)
+      .json({ message: `Parqueadero ${id} actualizado exitosamente` });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ message: 'Internal server Error' });
+    next(error);
   }
 };
+
+export const ingresarVehiculo = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  try {
+    const { placa, modelo, color } = req.body;
+    const id = parseInt(req.params.id);
+    const parqueadero = await service.ingresarVehiculo(
+      id,
+      placa as string,
+      modelo as string,
+      color as string
+    );
+    return res.status(200).json({
+      message: 'Vehiculo registrado exitosamente',
+      body: { placa, modelo, color },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const registrarSalidaVehiculo = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  try {
+    const { placa } = req.body;
+    const id = parseInt(req.params.id);
+    const parqueadero = await service.registrarSalidaVehiculo(
+      id,
+      placa as string
+    );
+    return res.status(200).json({
+      message: 'Vehiculo retirado exitosamente',
+      body: { placa },
+    });
+  } catch (error) {
+    next(error);
+  }
+}

@@ -19,12 +19,12 @@ import parqueaderoRoutes from './routes/parqueadero.router';
 const cors = require('cors');
 
 // definir middleware
-const {
+import {
   logErrors,
   errorHandler,
   boomErrorHandler,
   validationErrorHandler,
-} = require('./middlewares/error.handler');
+} from './middlewares/error.handler';
 // Create Express server
 const app = express();
 
