@@ -126,6 +126,16 @@ class ParqueaderoService {
   ): Promise<Parqueadero | void> {
     const parqueadero = await this.getParqueaderoById(idParqueadero);
 
+    // verificar que el parqueadero este asignado a un usuario
+    if (!parqueadero.usuario) {
+      throw boom.badRequest(
+        'El parqueadero no está asignado a ningún usuario, no se pueden registrar vehiculos',
+        {
+          idParqueadero,
+        }
+      );
+    }
+
     // si el parqueadero no tiene espacio disponible, no se puede ingresar
     if (parqueadero.espacioDisponible <= 0) {
       throw boom.badRequest('El parqueadero no tiene espacio disponible', {
@@ -240,6 +250,19 @@ class ParqueaderoService {
     parqueadero.espacioDisponible = parqueadero.espacioDisponible + 1;
     await vehiculo.save();
     await parqueadero.save();
+  }
+
+  // listado de vehiculos que estan en el parqueadero
+  async getVehiculosEnParqueadero(
+    idParqueadero: number
+  ): Promise<Vehiculo[] | void> {
+    const parqueadero = await this.getParqueaderoById(idParqueadero);
+
+    console.log(`ESTO TIENE PARQUEADERO: `, parqueadero);
+    const vehiculos = parqueadero.vehiculos;
+    console.log(`ESTO TIENE VEHICULOS: `, vehiculos);
+
+    return vehiculos;
   }
 }
 

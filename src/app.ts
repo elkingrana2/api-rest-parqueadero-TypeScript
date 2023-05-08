@@ -24,6 +24,7 @@ import {
   errorHandler,
   boomErrorHandler,
   validationErrorHandler,
+  handleDuplicateKeyErrors,
 } from './middlewares/error.handler';
 // Create Express server
 const app = express();
@@ -50,6 +51,7 @@ loadApiEndpoints(app);
 // Errores middleware se usan despues de las rutas
 app.use(logErrors);
 app.use(boomErrorHandler);
+app.use(handleDuplicateKeyErrors);
 app.use(validationErrorHandler);
 app.use(errorHandler);
 

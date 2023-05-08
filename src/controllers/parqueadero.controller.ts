@@ -148,4 +148,18 @@ export const registrarSalidaVehiculo = async (
   } catch (error) {
     next(error);
   }
+};
+
+export const getVehiculosEnParqueadero = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  try {
+    const id = parseInt(req.params.id);
+    const vehiculos = await service.getVehiculosEnParqueadero(id);
+    return res.status(200).json({ vehiculos });
+  } catch (error) {
+    next(error);
+  }
 }

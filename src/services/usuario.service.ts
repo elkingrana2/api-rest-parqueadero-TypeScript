@@ -1,9 +1,12 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-useless-constructor */
 /* eslint-disable prettier/prettier */
 /* eslint-disable simple-import-sort/imports */
 
 //import sequelize from '../configuration/sequelize';
 import { Usuario, Rol } from '../entities/Usuario.entitie';
+
+import bcrypt from 'bcrypt';
 
 import boom from '@hapi/boom';
 //import { DataSource } from 'typeorm';
@@ -28,7 +31,7 @@ class UsuariosService {
   async getUsuarioById(idUsuario: number): Promise<Usuario> {
     const usuario = await Usuario.findOne({
       where: { id: idUsuario },
-      relations: ['usuario'],
+      relations: ['jefe'],
     });
     //const usuario = await Usuario.findOneBy({ id: idUsuario });
     if (!usuario) {
@@ -44,11 +47,13 @@ class UsuariosService {
     correo: string,
     password: string
   ): Promise<Usuario> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    const hash = await bcrypt.hash(password, 10);
     const usuario = new Usuario();
     usuario.nombre = nombre;
     usuario.apellido = apellido;
     usuario.correo = correo;
-    usuario.password = password;
+    usuario.password = hash;
     usuario.rol = Rol.socio;
 
     await usuario.save();
@@ -60,10 +65,13 @@ class UsuariosService {
     // busco el usaurio por id
     const usuarioExistente = await this.getUsuarioById(idUsuario);
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+    const hash = await bcrypt.hash(usuario.password, 10);
+
     usuarioExistente.nombre = usuario.nombre;
     usuarioExistente.apellido = usuario.apellido;
     usuarioExistente.correo = usuario.correo;
-    usuarioExistente.password = usuario.password;
+    usuarioExistente.password = hash;
 
     await usuarioExistente.save();
 

@@ -11,6 +11,7 @@ import {
   updateParqueadero,
   ingresarVehiculo,
   registrarSalidaVehiculo,
+  getVehiculosEnParqueadero,
 } from '../controllers/parqueadero.controller';
 
 import validatorHandler from '../middlewares/validator.handler';
@@ -21,10 +22,7 @@ import {
   updateParqueaderoSchema,
 } from '../schema/parqueadero.schema';
 
-import {
-  registerVehiculoSchema,
-  getVehiculoSchema,
-} from '../schema/vehiculo.schema';
+import { registerVehiculoSchema } from '../schema/vehiculo.schema';
 
 const router = Router();
 
@@ -55,10 +53,11 @@ router.delete(
 router.post(
   '/:id/vehiculos',
   validatorHandler(registerVehiculoSchema, 'body'),
-  validatorHandler(getVehiculoSchema, 'params'),
   ingresarVehiculo
 );
 
 router.put('/:id/vehiculos', registrarSalidaVehiculo);
+
+router.post('/:id/vehiculos-en-parqueadero', getVehiculosEnParqueadero);
 
 export default router;

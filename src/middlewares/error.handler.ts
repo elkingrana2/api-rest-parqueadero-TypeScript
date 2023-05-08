@@ -1,7 +1,9 @@
+/* eslint-disable import/no-duplicates */
 /* eslint-disable no-console */
 /* eslint-disable prettier/prettier */
 import { Boom } from '@hapi/boom';
-import { ErrorRequestHandler } from 'express';
+import { ErrorRequestHandler, NextFunction, Request, Response } from 'express';
+import { QueryFailedError } from 'typeorm';
 
 export const logErrors: ErrorRequestHandler = (err, req, res, next) => {
   console.log('logErrors');
@@ -51,4 +53,22 @@ export const validationErrorHandler: ErrorRequestHandler = (
   } else {
     next(err);
   }
+};
+
+export const handleDuplicateKeyErrors: ErrorRequestHandler = (
+  err: QueryFailedError,
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  if (
+    err instanceof QueryFailedError &&
+    err.message.includes('duplicate key value violates unique constraint')
+  ) {
+    return res
+      .status(409)
+      .json({ statusCode: 409, message: err.name, errors: 'El registro ya existe' });
+  }
+
+  next(err);
 };

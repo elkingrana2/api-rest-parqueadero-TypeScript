@@ -105,7 +105,7 @@ export const updateUsuario = async (
 ): Promise<Response | void> => {
   try {
     const id = parseInt(req.params.id);
-    const { apellido, correo, nombre, password } = req.body;
+    const { nombre, apellido, correo, password } = req.body;
 
     const usuario = new Usuario();
     usuario.nombre = nombre as string;
@@ -113,10 +113,18 @@ export const updateUsuario = async (
     usuario.correo = correo as string;
     usuario.password = password as string;
 
-    await service.updateUsuario(id, usuario);
-    return res
-      .status(200)
-      .json({ message: `Usuario ${id} actualizado correctamente` });
+    const usuarioResp = await service.updateUsuario(id, usuario);
+
+    const usuarioResponse = new UsuarioResponse();
+    usuarioResponse.id = usuarioResp.id;
+    usuarioResponse.nombre = usuarioResp.nombre;
+    usuarioResponse.apellido = usuarioResp.apellido;
+    usuarioResponse.correo = usuarioResp.correo;
+
+    return res.status(200).json({
+      message: `Usuario ${id} actualizado correctamente`,
+      usuario: usuarioResponse,
+    });
   } catch (error) {
     next(error);
   }
@@ -130,7 +138,7 @@ export const agregarParqueaderoSocio = async (
 ): Promise<Response | void> => {
   try {
     const idUsuario = parseInt(req.params.idUsuario);
-    const idParqueadero  = parseInt(req.params.idParqueadero);
+    const idParqueadero = parseInt(req.params.idParqueadero);
 
     await service.agregarParqueaderoSocio(idUsuario, idParqueadero);
     return res
@@ -139,4 +147,4 @@ export const agregarParqueaderoSocio = async (
   } catch (error) {
     next(error);
   }
-}
+};
