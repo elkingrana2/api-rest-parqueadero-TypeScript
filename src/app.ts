@@ -15,6 +15,7 @@ import path from 'path';
 import { loadApiEndpoints } from './controllers/api';
 import usuarioRoutes from './routes/usuario.router';
 import parqueaderoRoutes from './routes/parqueadero.router';
+import loginRoutes from './routes/auth.router';
 
 const cors = require('cors');
 
@@ -26,11 +27,17 @@ import {
   validationErrorHandler,
   handleDuplicateKeyErrors,
 } from './middlewares/error.handler';
+//import { LoginStrategy } from './auth/strategies/login.strategy';
 // Create Express server
 const app = express();
 
+//app.use(LoginStrategy);
+const passport = require('passport');
+
 // global error handler
 app.use(cors());
+
+//require('./utils/auth');
 
 // Express configuration
 app.set('port', process.env.PORT ?? 3000);
@@ -40,11 +47,14 @@ app.use(
   express.static(path.join(__dirname, '../public'), { maxAge: 31557600000 })
 );
 
+//app.use(passport.initialize());
+
 //Manejo de rutas
 const router = express.Router();
 app.use('/api/v1', router);
 router.use('/usuarios', usuarioRoutes);
 router.use('/parqueaderos', parqueaderoRoutes);
+router.use('/auth', loginRoutes);
 
 loadApiEndpoints(app);
 

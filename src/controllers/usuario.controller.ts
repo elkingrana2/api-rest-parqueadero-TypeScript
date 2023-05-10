@@ -10,8 +10,9 @@
 import { Request, Response, NextFunction } from 'express';
 
 import UsuariosService from '../services/usuario.service';
-import { Usuario } from '../entities/Usuario.entitie';
+import { Rol, Usuario } from '../entities/Usuario.entitie';
 import { UsuarioResponse } from '../responses/usuario.response';
+import { DataSource } from 'typeorm';
 
 const service = new UsuariosService();
 
@@ -115,6 +116,9 @@ export const updateUsuario = async (
 
     const usuarioResp = await service.updateUsuario(id, usuario);
 
+    //usuarioResp.password = password as string;
+    //delete usuarioResp.DataSource.password;
+
     const usuarioResponse = new UsuarioResponse();
     usuarioResponse.id = usuarioResp.id;
     usuarioResponse.nombre = usuarioResp.nombre;
@@ -144,6 +148,23 @@ export const agregarParqueaderoSocio = async (
     return res
       .status(200)
       .json({ message: `Parqueadero ${idParqueadero} agregado correctamente` });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// buscar un usuario por id y rol
+export const getUsuarioByIdAndRol = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  try {
+    const id = parseInt(req.params.id);
+    const { rol } = req.body;
+
+    const usuario = await service.findUsuarioByIdAndRol(id, rol as Rol);
+    return res.status(200).json({ usuario });
   } catch (error) {
     next(error);
   }

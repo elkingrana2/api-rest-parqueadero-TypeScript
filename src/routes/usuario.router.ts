@@ -5,6 +5,8 @@
 import { Router } from 'express';
 import validatorHandler from '../middlewares/validator.handler';
 
+import { tokenValidation, validarTokenAdmin } from '../lib/veryfyToken';
+
 import {
   createUsuarioSchema,
   getUsuarioSchema,
@@ -22,25 +24,46 @@ import {
 const router = Router();
 
 // rutas de usuarios
-router.get('/', getUsuarios);
+router.get('/', tokenValidation, validarTokenAdmin, getUsuarios);
+
 router.get(
   '/:id',
+  tokenValidation,
+  validarTokenAdmin,
   validatorHandler(getUsuarioSchema, 'params'),
   getUsuarioById
 );
-router.post('/', validatorHandler(createUsuarioSchema, 'body'), createUsuario);
+
+router.post(
+  '/',
+  tokenValidation,
+  validarTokenAdmin,
+  validatorHandler(createUsuarioSchema, 'body'),
+  createUsuario
+);
 router.put(
   '/:id',
+  tokenValidation,
+  validarTokenAdmin,
   validatorHandler(getUsuarioSchema, 'params'),
   validatorHandler(createUsuarioSchema, 'body'),
   updateUsuario
 );
 router.delete(
   '/:id',
+  tokenValidation,
+  validarTokenAdmin,
   validatorHandler(getUsuarioSchema, 'params'),
   deleteUsuario
 );
-router.put('/:idUsuario/parqueaderos/:idParqueadero', agregarParqueaderoSocio);
+router.put(
+  '/:idUsuario/parqueaderos/:idParqueadero',
+  tokenValidation,
+  validarTokenAdmin,
+  agregarParqueaderoSocio
+);
+
+//router.get('/:id/rol', getUsuarioByIdAndRol);
 
 export default router;
 

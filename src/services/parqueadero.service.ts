@@ -8,6 +8,8 @@ import { Parqueadero } from '../entities/parqueadero.entitie';
 import { Vehiculo } from '../entities/vehiculo.entitie';
 
 class ParqueaderoService {
+
+
   async getParqueaderos(): Promise<Parqueadero[]> {
     const parqueadero = Parqueadero.find();
 
@@ -264,6 +266,8 @@ class ParqueaderoService {
 
     return vehiculos;
   }
+
+
 }
 
 export default ParqueaderoService;

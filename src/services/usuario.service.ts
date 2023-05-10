@@ -6,7 +6,7 @@
 //import sequelize from '../configuration/sequelize';
 import { Usuario, Rol } from '../entities/Usuario.entitie';
 
-import bcrypt from 'bcrypt';
+import * as bcrypt from 'bcrypt';
 
 import boom from '@hapi/boom';
 //import { DataSource } from 'typeorm';
@@ -38,6 +38,27 @@ class UsuariosService {
       throw boom.notFound('Usuario no encontrado', { idUsuario });
     }
 
+    return usuario;
+  }
+
+  async findUsuarioByCorreo(correo: string): Promise<Usuario | null> {
+    // optener el password del usuario
+    const usuario = await Usuario.findOne({
+      where: { correo },
+    });
+
+    return usuario;
+  }
+
+  // buscar un usuario por id y rol
+  async findUsuarioByIdAndRol(
+    idUsuario: number,
+    rol: Rol
+  ): Promise<Usuario | null> {
+    const usuario = await Usuario.findOne({
+      where: { id: idUsuario, rol },
+    });
+    
     return usuario;
   }
 

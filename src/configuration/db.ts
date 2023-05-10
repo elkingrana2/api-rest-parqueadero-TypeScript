@@ -1,6 +1,7 @@
 /* eslint-disable prettier/prettier */
 import { DataSource } from 'typeorm';
 
+//import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { Historial } from '../entities/historial.entitie';
 import { Parqueadero } from '../entities/parqueadero.entitie';
 import { Usuario } from '../entities/Usuario.entitie';
@@ -16,6 +17,7 @@ export const AppDataSource = new DataSource({
   entities: [Usuario, Parqueadero, Vehiculo, Historial],
   synchronize: true,
   logging: true,
+  //namingStrategy: new SnakeNamingStrategy(),
   subscribers: [],
   migrations: [],
 });
