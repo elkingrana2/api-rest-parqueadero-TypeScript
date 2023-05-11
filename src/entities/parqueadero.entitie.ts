@@ -42,7 +42,7 @@ export class Parqueadero extends BaseEntity {
   historial: Historial[];
 
   // Implementacion de Soft Delete
-  @Column({ default: false })
+  @Column({ default: false, select: false })
   eliminado: boolean;
 
   // constructor() {

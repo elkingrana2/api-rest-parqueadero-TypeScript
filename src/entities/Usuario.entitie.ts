@@ -51,22 +51,17 @@ export class Usuario extends BaseEntity {
   @OneToMany(() => Usuario, (usuario) => usuario.jefe)
   empleados: Usuario[];
 
-  @Column({ default: false })
+  @Column({ default: false, select: false })
   eliminado: boolean;
 
-  // constructor(
-  //   nombre: string,
-  //   apellido: string,
-  //   correo: string,
-  //   password: string,
-  //   rol: Rol
-  // ) {
-  //   this.nombre = nombre;
-  //   this.apellido = apellido;
-  //   this.correo = correo;
-  //   this.password = password;
-  //   this.rol = rol;
+  // constructor() {
+  //   super();
+  //   this.parqueaderos = [];
   // }
+
+  getParqueaderos(): Parqueadero[] {
+    return this.parqueaderos;
+  }
 
   addParqueadero(parqueadero: Parqueadero): void {
     this.parqueaderos.push(parqueadero);

@@ -80,6 +80,41 @@ export const createUsuario = async (
   }
 };
 
+// Socio crea usuario con el rol de empleado
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+export const createUsuarioEmpleado = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { apellido, correo, nombre, password } = req.body;
+
+    const usuario1 = new Usuario();
+    usuario1.nombre = nombre as string;
+    usuario1.apellido = apellido as string;
+    usuario1.correo = correo as string;
+    usuario1.password = password as string;
+
+    const usuario = await service.createUsuarioEmpleado(req, usuario1);
+
+    const usuarioResponse = new UsuarioResponse();
+    usuarioResponse.id = usuario.id;
+    usuarioResponse.nombre = usuario.nombre;
+    usuarioResponse.apellido = usuario.apellido;
+    usuarioResponse.correo = usuario.correo;
+
+    return res.status(200).json({
+      message: 'Usuario creado correctamente',
+      body: {
+        usuarioResponse,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // eliminar un usuario
 export const deleteUsuario = async (
   req: Request,

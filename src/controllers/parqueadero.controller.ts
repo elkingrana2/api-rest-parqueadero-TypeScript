@@ -6,6 +6,7 @@
 /* eslint-disable prettier/prettier */
 import { NextFunction, Request, Response } from 'express';
 
+import { Usuario } from '../entities/Usuario.entitie';
 import ParqueaderoService from '../services/parqueadero.service';
 
 const service = new ParqueaderoService();
@@ -114,11 +115,13 @@ export const ingresarVehiculo = async (
   try {
     const { placa, modelo, color } = req.body;
     const id = parseInt(req.params.id);
+    const usuario = req.user as Usuario;
     const parqueadero = await service.ingresarVehiculo(
       id,
       placa as string,
       modelo as string,
-      color as string
+      color as string,
+      usuario
     );
     return res.status(200).json({
       message: 'Vehiculo registrado exitosamente',
@@ -137,9 +140,11 @@ export const registrarSalidaVehiculo = async (
   try {
     const { placa } = req.body;
     const id = parseInt(req.params.id);
+    const usuario = req.user as Usuario;
     const parqueadero = await service.registrarSalidaVehiculo(
       id,
-      placa as string
+      placa as string,
+      usuario
     );
     return res.status(200).json({
       message: 'Vehiculo retirado exitosamente',
@@ -162,4 +167,4 @@ export const getVehiculosEnParqueadero = async (
   } catch (error) {
     next(error);
   }
-}
+};

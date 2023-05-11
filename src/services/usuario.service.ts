@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-useless-constructor */
 /* eslint-disable prettier/prettier */
@@ -8,6 +9,8 @@ import { Usuario, Rol } from '../entities/Usuario.entitie';
 
 import * as bcrypt from 'bcrypt';
 
+import { Request } from 'express';
+
 import boom from '@hapi/boom';
 //import { DataSource } from 'typeorm';
 
@@ -17,10 +20,10 @@ import { Parqueadero } from '../entities/parqueadero.entitie';
 const parqueaderoService = new ParqueaderoService();
 
 class UsuariosService {
-  constructor() {
-    //this.usuarios = [];
-    //this.find();
-  }
+  // constructor() {
+  //   super();
+  //   //this.parqueaderos = [];
+  // }
 
   async getUsuarios(): Promise<Usuario[]> {
     const usuario = Usuario.find();
@@ -58,7 +61,11 @@ class UsuariosService {
     const usuario = await Usuario.findOne({
       where: { id: idUsuario, rol },
     });
-    
+
+    if (!usuario) {
+      throw boom.notFound('Usuario no encontrado', { idUsuario });
+    }
+
     return usuario;
   }
 
@@ -76,6 +83,7 @@ class UsuariosService {
     usuario.correo = correo;
     usuario.password = hash;
     usuario.rol = Rol.socio;
+    usuario.parqueaderos = [];
 
     await usuario.save();
 
@@ -135,10 +143,11 @@ class UsuariosService {
     // }
 
     const parqueadero1 = await Parqueadero.findOne({
-      where: { id: 1 },
+      where: { id: idParqueadero },
       relations: ['usuario'],
     });
-    if (parqueadero1) {
+    console.log(`Este es el parqueadero: `, parqueadero1);
+    if (parqueadero1?.usuario !== null) {
       // el parqueadero ya está asociado a un usuario
       throw boom.badRequest('El parqueadero ya esta asignado a otro usuario', {
         idUsuario,
@@ -147,6 +156,44 @@ class UsuariosService {
 
     parqueadero.usuario = usuario;
     await parqueadero.save();
+    //parqueadero.vehiculos = [];
+
+    //usuario.parqueaderos.push(parqueadero);
+    //console.log(`Este es el usuario: `, usuario);
+    //console.log(`parqueaderos del socio: `, usuario.parqueaderos.length);
+
+    //usuario.addParqueadero(parqueadero);
+    //console.log(`Este es el usuario: `, usuario);
+    //console.log(`parqueaderos del socio: `, usuario.parqueaderos.length);
+    //await usuario.save();
+  }
+
+  // Socio crea usuario con el rol de empleado
+  async createUsuarioEmpleado(
+    req: Request,
+    usuario: Usuario
+  ): Promise<Usuario> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+
+    const user = req.user as Usuario;
+
+    //const id = user.sub as number;
+
+    const jefe = await this.getUsuarioById(user.id);
+    console.log(`Este es el jefe logueado: `, jefe);
+
+    const hash = await bcrypt.hash(usuario.password, 10);
+    const usuarioNuevo = new Usuario();
+    usuarioNuevo.nombre = usuario.nombre;
+    usuarioNuevo.apellido = usuario.apellido;
+    usuarioNuevo.correo = usuario.correo;
+    usuarioNuevo.password = hash;
+    usuarioNuevo.rol = Rol.empleado;
+    usuarioNuevo.jefe = jefe;
+
+    await usuarioNuevo.save();
+
+    return usuarioNuevo;
   }
 }
 

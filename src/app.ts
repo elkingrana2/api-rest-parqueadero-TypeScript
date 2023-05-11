@@ -37,7 +37,7 @@ const passport = require('passport');
 // global error handler
 app.use(cors());
 
-//require('./utils/auth');
+require('./utils/auth');
 
 // Express configuration
 app.set('port', process.env.PORT ?? 3000);

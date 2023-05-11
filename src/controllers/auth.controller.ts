@@ -33,7 +33,7 @@ export const signin = async (
 
     const user = findUser;
     const payload = {
-      sub: user.id,
+      id: user.id,
       nombre: user.nombre,
       rol: user.rol,
     };
@@ -43,6 +43,8 @@ export const signin = async (
     });
     console.log(token.split('.'));
     console.log(payload.rol);
+
+    //console.log(`lo que hay en req`, req);
     //res.header('auth-token', token).json(findUser)
     res.json({ token });
   } catch (error) {

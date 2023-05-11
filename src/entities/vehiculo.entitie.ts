@@ -35,4 +35,9 @@ export class Vehiculo extends BaseEntity {
     cascade: true,
   })
   historial: Historial[];
+
+  addHistorial(historial: Historial): void {
+    this.historial.push(historial);
+    historial.vehiculo = this;
+  }
 }

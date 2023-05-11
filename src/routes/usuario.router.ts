@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable import/no-duplicates */
 /* eslint-disable simple-import-sort/imports */
 /* eslint-disable @typescript-eslint/no-misused-promises */
@@ -5,7 +6,11 @@
 import { Router } from 'express';
 import validatorHandler from '../middlewares/validator.handler';
 
-import { tokenValidation, validarTokenAdmin } from '../lib/veryfyToken';
+//import { tokenValidation, validarTokenAdmin } from '../lib/veryfyToken';
+
+import passport from 'passport';
+
+import { checkRoles } from '../middlewares/auth.handler';
 
 import {
   createUsuarioSchema,
@@ -19,48 +24,67 @@ import {
   deleteUsuario,
   updateUsuario,
   agregarParqueaderoSocio,
+  createUsuarioEmpleado,
 } from '../controllers/usuario.controller';
+import { Rol } from '../entities/Usuario.entitie';
 
 const router = Router();
 
 // rutas de usuarios
-router.get('/', tokenValidation, validarTokenAdmin, getUsuarios);
+router.get(
+  '/',
+  passport.authenticate('jwt', { session: false }),
+  checkRoles(Rol.admin),
+  //validarTokenAdmin,
+  getUsuarios
+);
 
 router.get(
   '/:id',
-  tokenValidation,
-  validarTokenAdmin,
+  passport.authenticate('jwt', { session: false }),
+  checkRoles(Rol.admin),
   validatorHandler(getUsuarioSchema, 'params'),
   getUsuarioById
 );
 
 router.post(
   '/',
-  tokenValidation,
-  validarTokenAdmin,
+  passport.authenticate('jwt', { session: false }),
+  checkRoles(Rol.admin),
   validatorHandler(createUsuarioSchema, 'body'),
   createUsuario
 );
 router.put(
   '/:id',
-  tokenValidation,
-  validarTokenAdmin,
+  passport.authenticate('jwt', { session: false }),
+  checkRoles(Rol.admin),
   validatorHandler(getUsuarioSchema, 'params'),
   validatorHandler(createUsuarioSchema, 'body'),
   updateUsuario
 );
 router.delete(
   '/:id',
-  tokenValidation,
-  validarTokenAdmin,
+  passport.authenticate('jwt', { session: false }),
+  checkRoles(Rol.admin),
   validatorHandler(getUsuarioSchema, 'params'),
   deleteUsuario
 );
+
+// Agregar un parqueadero a un socio (admin)
 router.put(
   '/:idUsuario/parqueaderos/:idParqueadero',
-  tokenValidation,
-  validarTokenAdmin,
+  passport.authenticate('jwt', { session: false }),
+  checkRoles(Rol.admin),
   agregarParqueaderoSocio
+);
+
+// crear un usuario empleado (socio)
+router.post(
+  '/socio-crea-empleado',
+  passport.authenticate('jwt', { session: false }),
+  checkRoles(Rol.socio),
+  validatorHandler(createUsuarioSchema, 'body'),
+  createUsuarioEmpleado
 );
 
 //router.get('/:id/rol', getUsuarioByIdAndRol);
