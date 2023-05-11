@@ -17,6 +17,9 @@ import {
   ingresarVehiculo,
   registrarSalidaVehiculo,
   getVehiculosEnParqueadero,
+  getDetalleVehiculo,
+  getParqueaderosPorSocio,
+  listadoVehiculosParqueaderos,
 } from '../controllers/parqueadero.controller';
 
 import validatorHandler from '../middlewares/validator.handler';
@@ -27,7 +30,10 @@ import {
   updateParqueaderoSchema,
 } from '../schema/parqueadero.schema';
 
-import { registerVehiculoSchema } from '../schema/vehiculo.schema';
+import {
+  registerVehiculoSchema,
+  getVehiculoSchema,
+} from '../schema/vehiculo.schema';
 import { Rol } from '../entities/Usuario.entitie';
 
 const router = Router();
@@ -84,6 +90,35 @@ router.put(
   registrarSalidaVehiculo
 );
 
-router.get('/:id/vehiculos', getVehiculosEnParqueadero);
+router.get(
+  '/:id/vehiculos',
+  passport.authenticate('jwt', { session: false }),
+  // mandar el rol de admin y socio en checkRoles
+  checkRoles(Rol.admin, Rol.socio, Rol.empleado),
+  //checkRoles(Rol.admin, Rol.socio),
+  getVehiculosEnParqueadero
+);
+
+router.get(
+  '/vehiculos-detalle/:placa',
+  passport.authenticate('jwt', { session: false }),
+  checkRoles(Rol.admin, Rol.socio, Rol.empleado),
+  validatorHandler(getVehiculoSchema, 'params'),
+  getDetalleVehiculo
+);
+
+router.get(
+  '/socio/lista',
+  passport.authenticate('jwt', { session: false }),
+  checkRoles(Rol.socio),
+  getParqueaderosPorSocio
+);
+
+router.get(
+  '/socio/vehiculos',
+  passport.authenticate('jwt', { session: false }),
+  checkRoles(Rol.empleado),
+  listadoVehiculosParqueaderos
+);
 
 export default router;

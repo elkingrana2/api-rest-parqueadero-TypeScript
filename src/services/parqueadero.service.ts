@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable no-await-in-loop */
 /* eslint-disable no-console */
 /* eslint-disable prettier/prettier */
 
@@ -5,7 +8,7 @@ import boom from '@hapi/boom';
 
 import { Historial } from '../entities/historial.entitie';
 import { Parqueadero } from '../entities/parqueadero.entitie';
-import { Usuario } from '../entities/Usuario.entitie';
+import { Rol, Usuario } from '../entities/Usuario.entitie';
 import { Vehiculo } from '../entities/vehiculo.entitie';
 
 class ParqueaderoService {
@@ -23,7 +26,7 @@ class ParqueaderoService {
   async getParqueaderoById(idParqueadero: number): Promise<Parqueadero> {
     const parqueadero = await Parqueadero.findOne({
       where: { id: idParqueadero },
-      relations: ['usuario', 'vehiculos', 'vehiculos.historial'],
+      relations: ['usuario', 'vehiculos'],
       // traer tambien el historial que esta en la tabla vehiculo
     });
     //const parqueadero = await Parqueadero.findOneBy({ id: idParqueadero });
@@ -318,16 +321,212 @@ class ParqueaderoService {
 
   // listado de vehiculos que estan en el parqueadero
   async getVehiculosEnParqueadero(
-    idParqueadero: number
+    idParqueadero: number,
+    usuario: Usuario
   ): Promise<Vehiculo[] | void> {
-    const parqueadero = await this.getParqueaderoById(idParqueadero);
+    //const parqueadero = await this.getParqueaderoById(idParqueadero);
+    const parqueadero = await Parqueadero.findOne({
+      where: { id: idParqueadero },
+      relations: ['usuario', 'vehiculos', 'vehiculos.historial'],
+      // traer tambien el historial que esta en la tabla vehiculo
+    });
 
-    console.log(`ESTO TIENE PARQUEADERO: `, parqueadero);
+    if (!parqueadero) {
+      throw boom.notFound('Parqueadero no encontrado', { idParqueadero });
+    }
+
+    if (usuario.rol === Rol.socio) {
+      return await this.vehiculosEnParqueadero_socio(idParqueadero, usuario);
+    }
+
+    if (usuario.rol === Rol.empleado) {
+      console.log(`ACA LLEGA`);
+      const empleado = await Usuario.findOne({
+        where: { id: usuario.id },
+        relations: ['jefe'],
+      });
+      console.log(`ESTO TIENE EMPLEADO: `, empleado);
+
+      const jefe = empleado?.jefe as Usuario;
+
+      return await this.vehiculosEnParqueadero_socio(idParqueadero, jefe);
+    }
+
+    //console.log(`ESTO TIENE PARQUEADERO: `, parqueadero);
     const vehiculos = parqueadero.vehiculos;
-    console.log(`ESTO TIENE VEHICULOS: `, vehiculos);
+    //console.log(`ESTO TIENE VEHICULOS: `, vehiculos);
 
     return vehiculos;
   }
+
+  async vehiculosEnParqueadero_socio(
+    idParqueadero: number,
+    usuario: Usuario
+  ): Promise<Vehiculo[] | void> {
+    const parqueadero = await Parqueadero.findOne({
+      where: { id: idParqueadero },
+      relations: ['usuario', 'vehiculos', 'vehiculos.historial'],
+      // traer tambien el historial que esta en la tabla vehiculo
+    });
+
+    if (!parqueadero) {
+      throw boom.notFound('Parqueadero no encontrado', { idParqueadero });
+    }
+
+    const usuarioLoggeado = await Usuario.findOne({
+      where: { id: usuario.id },
+      relations: ['parqueaderos'],
+    });
+
+    if (!usuarioLoggeado) {
+      throw boom.notFound('Usuario no encontrado', { id: usuario.id });
+    }
+
+    // verificar que el usuario tenga parqueaderos
+    if (usuarioLoggeado.parqueaderos.length === 0) {
+      throw boom.badRequest('El usuario no tiene parqueaderos', {
+        id: usuario.id,
+      });
+    }
+
+    // verificar si el parqueadero pertenece al usuario
+    const parqueaderoEncontrado = usuarioLoggeado.parqueaderos.find(
+      (parqueadero) => parqueadero.id === idParqueadero
+    );
+
+    if (!parqueaderoEncontrado) {
+      throw boom.badRequest('El parqueadero no pertenece al usuario', {
+        idParqueadero,
+      });
+    }
+
+    const vehiculos = parqueadero.vehiculos;
+
+    return vehiculos;
+  }
+
+  // optener el detalle de un vehiculo por su placa
+  async getDetalleVehiculo(
+    placa: string,
+    usuario: Usuario
+  ): Promise<Vehiculo | void> {
+    const vehiculo = await Vehiculo.findOne({
+      where: { placa },
+      relations: ['historial', 'parqueadero.usuario'],
+    });
+
+    if (!vehiculo) {
+      throw boom.notFound('Vehiculo no encontrado', { placa });
+    }
+
+    if (usuario.rol === Rol.socio) {
+      return await this.detalleVehiculo_socio(vehiculo, usuario);
+    }
+
+    if (usuario.rol === Rol.empleado) {
+      const empleado = await Usuario.findOne({
+        where: { id: usuario.id },
+        relations: ['jefe'],
+      });
+
+      const jefe = empleado?.jefe as Usuario;
+
+      return await this.detalleVehiculo_socio(vehiculo, jefe);
+    }
+
+    return vehiculo;
+  }
+
+  // detalle de un vehiculo para un socio
+  async detalleVehiculo_socio(
+    vehiculo: Vehiculo,
+    usuario: Usuario
+  ): Promise<Vehiculo | void> {
+    // ver si el vehiculo esta en un parqueadero
+    if (vehiculo.parqueadero === null) {
+      throw boom.badRequest('El vehiculo no está en ningún parqueadero', {
+        placa: vehiculo.placa,
+      });
+    }
+    // parqueadero en el que esta el vehiculo
+    const parqueadero = vehiculo.parqueadero;
+    const usuarioLoggeado = await Usuario.findOne({
+      where: { id: usuario.id },
+      relations: ['parqueaderos'],
+    });
+
+    const correo1 = parqueadero.usuario?.correo;
+    const correo2 = usuarioLoggeado?.correo;
+
+    if (correo1 !== correo2) {
+      throw boom.forbidden(
+        'El usuario no tiene permisos para ver el detalle del vehiculo',
+        {
+          placa: vehiculo.placa,
+        }
+      );
+    }
+
+    return vehiculo;
+  }
+
+  // optener parqueaderos por socio (los parqueaderos que tiene un socio)
+  async getParqueaderosPorSocio(socio: Usuario): Promise<Parqueadero[] | void> {
+    const usuario = await Usuario.findOne({
+      where: { id: socio.id },
+      relations: ['parqueaderos'],
+    });
+
+    // ver que el usuario tiene parqueaderos
+    if (usuario?.parqueaderos.length === 0) {
+      throw boom.badRequest('El usuario no tiene parqueaderos asignados', {
+        id: socio.id,
+      });
+    }
+
+    if (!usuario) {
+      throw boom.notFound('Usuario no encontrado', { id: socio.id });
+    }
+
+    const parqueaderos = usuario.parqueaderos;
+
+    return parqueaderos;
+  }
+
+  // el rol empleado lista los vehiculos de todos los parqueaderos de su jefe
+async listado_vehiculos_parqueaderos(
+  usuario: Usuario
+): Promise<Vehiculo[] | void> {
+
+  const empleado = await Usuario.findOne({
+    where: { id: usuario.id },
+    relations: ['jefe'],
+  });
+
+  const jefe = empleado?.jefe as Usuario;
+
+  const parqueaderos = await this.getParqueaderosPorSocio(jefe) as Parqueadero[];
+
+  const vehiculos: Vehiculo[] = [];
+
+  for (const parqueadero of parqueaderos) {
+    const vehiculosParqueadero = await this.getVehiculosEnParqueadero(
+      parqueadero.id,
+      usuario
+    );
+
+    if (vehiculosParqueadero) {
+      vehiculosParqueadero.forEach((vehiculo) => {
+        vehiculos.push(vehiculo);
+      });
+    }
+  }
+
+  return vehiculos;
 }
+
+}
+
+
 
 export default ParqueaderoService;

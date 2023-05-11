@@ -7,6 +7,7 @@
 import { NextFunction, Request, Response } from 'express';
 
 import { Usuario } from '../entities/Usuario.entitie';
+import { Vehiculo } from '../entities/vehiculo.entitie';
 import ParqueaderoService from '../services/parqueadero.service';
 
 const service = new ParqueaderoService();
@@ -162,7 +163,65 @@ export const getVehiculosEnParqueadero = async (
 ): Promise<Response | void> => {
   try {
     const id = parseInt(req.params.id);
-    const vehiculos = await service.getVehiculosEnParqueadero(id);
+    const usuario = req.user as Usuario;
+    const vehiculos = await service.getVehiculosEnParqueadero(id, usuario);
+    return res.status(200).json({ vehiculos });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// optener el detalle de un vehiculo por su placa
+export const getDetalleVehiculo = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  try {
+    const placa = req.params.placa;
+    const usuario = req.user as Usuario;
+    const vehiculo = (await service.getDetalleVehiculo(
+      placa,
+      usuario
+    )) as Vehiculo;
+
+    return res.status(200).json({
+      vehiculo: {
+        placa: vehiculo.placa,
+        modelo: vehiculo.modelo,
+        color: vehiculo.color,
+        historial: vehiculo.historial,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// optener parqueaderos por socio (los parqueaderos que tiene un socio)
+export const getParqueaderosPorSocio = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  try {
+    const usuario = req.user as Usuario;
+    const parqueaderos = await service.getParqueaderosPorSocio(usuario);
+    return res.status(200).json({ parqueaderos });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// el rol empleado lista los vehiculos de todos los parqueaderos de su jefe
+export const listadoVehiculosParqueaderos = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  try {
+    const usuario = req.user as Usuario;
+    const vehiculos = await service.listado_vehiculos_parqueaderos(usuario);
     return res.status(200).json({ vehiculos });
   } catch (error) {
     next(error);

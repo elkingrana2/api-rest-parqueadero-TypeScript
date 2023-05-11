@@ -38,11 +38,11 @@ export function checkAdminRole(
 
 export function checkRoles(...roles: Rol[]) {
   return (req: Request, res: Response, next: NextFunction): void => {
-    //console.log(`ACA LLEGA :`);
+    console.log(`ACA LLEGA :`);
     const user = req.user as Usuario;
-    //console.log(`Usuario que llega: `, req.user);
+    console.log(`Usuario que llega: `, req.user);
     //console.log(`Lo que llega en req: `, req);
-    //console.log(`Roles que llegan: `, roles);
+    console.log(`Roles que llegan: `, roles);
     const rol = user.rol;
     //console.log(`Rol del usuario: `, rol);
     //console.log(`Rol del usuario incluides: `, roles.includes(rol));
