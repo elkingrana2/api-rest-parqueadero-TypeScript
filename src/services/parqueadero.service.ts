@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable no-await-in-loop */
 /* eslint-disable no-console */
 /* eslint-disable prettier/prettier */
 
@@ -266,7 +263,7 @@ class ParqueaderoService {
     });
 
     //console.log(`ESTO TIENE PARQUEADERO: `, parqueadero);
-    //console.log(`ESTO TIENE VEHICULO: `, vehiculo);
+    console.log(`ESTO TIENE VEHICULO: `, vehiculo);
     if (!vehiculo) {
       throw boom.notFound('Vehiculo no encontrado', { placa });
     }
@@ -309,14 +306,16 @@ class ParqueaderoService {
     historial.vehiculo = vehiculo;
     //vehiculo.addHistorial(historial);
     historial.parqueadero = parqueadero;
-    await historial.save();
+    //await historial.save();
+
+    console.log(`Asi queda el historial: `, historial);
 
     vehiculo.parqueadero = null;
     vehiculo.fechaIngreso = null;
     vehiculo.fechaSalida = historial.fechaSalida;
     parqueadero.espacioDisponible = parqueadero.espacioDisponible + 1;
-    await vehiculo.save();
-    await parqueadero.save();
+    // await vehiculo.save();
+    // await parqueadero.save();
   }
 
   // listado de vehiculos que estan en el parqueadero
@@ -494,39 +493,41 @@ class ParqueaderoService {
   }
 
   // el rol empleado lista los vehiculos de todos los parqueaderos de su jefe
-async listado_vehiculos_parqueaderos(
-  usuario: Usuario
-): Promise<Vehiculo[] | void> {
+  async listado_vehiculos_parqueaderos(
+    usuario: Usuario
+  ): Promise<Vehiculo[] | void> {
+    const empleado = await Usuario.findOne({
+      where: { id: usuario.id },
+      relations: ['jefe'],
+    });
 
-  const empleado = await Usuario.findOne({
-    where: { id: usuario.id },
-    relations: ['jefe'],
-  });
+    const jefe = empleado?.jefe as Usuario;
 
-  const jefe = empleado?.jefe as Usuario;
+    const parqueaderos = (await this.getParqueaderosPorSocio(
+      jefe
+    )) as Parqueadero[];
 
-  const parqueaderos = await this.getParqueaderosPorSocio(jefe) as Parqueadero[];
+    const vehiculos: Vehiculo[] = [];
+    console.log(`ESTO TIENE PARQUEADEROS: `, parqueaderos);
 
-  const vehiculos: Vehiculo[] = [];
-
-  for (const parqueadero of parqueaderos) {
-    const vehiculosParqueadero = await this.getVehiculosEnParqueadero(
-      parqueadero.id,
-      usuario
+    const promises = parqueaderos.map((parqueadero) =>
+      this.getVehiculosEnParqueadero(parqueadero.id, usuario)
     );
 
-    if (vehiculosParqueadero) {
-      vehiculosParqueadero.forEach((vehiculo) => {
-        vehiculos.push(vehiculo);
-      });
-    }
+    // que se cumplan todas las promesas antes del ciclo
+    const vehiculosParqueadero = await Promise.all(promises);
+
+    // se itera sobre cada matriz de vehiculos y se agrega cada vehiculo a la matriz vehiculos
+    vehiculosParqueadero.forEach((vehiculosParqueaderoParqueadero) => {
+      if (vehiculosParqueaderoParqueadero) {
+        vehiculosParqueaderoParqueadero.forEach((vehiculo) => {
+          vehiculos.push(vehiculo);
+        });
+      }
+    });
+
+    return vehiculos;
   }
-
-  return vehiculos;
 }
-
-}
-
-
 
 export default ParqueaderoService;

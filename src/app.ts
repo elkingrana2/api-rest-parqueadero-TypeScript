@@ -16,6 +16,7 @@ import { loadApiEndpoints } from './controllers/api';
 import usuarioRoutes from './routes/usuario.router';
 import parqueaderoRoutes from './routes/parqueadero.router';
 import loginRoutes from './routes/auth.router';
+import historialRoutes from './routes/historial.router';
 
 const cors = require('cors');
 
@@ -55,6 +56,7 @@ app.use('/api/v1', router);
 router.use('/usuarios', usuarioRoutes);
 router.use('/parqueaderos', parqueaderoRoutes);
 router.use('/auth', loginRoutes);
+router.use('/indicadores', historialRoutes);
 
 loadApiEndpoints(app);
 

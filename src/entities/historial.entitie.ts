@@ -3,6 +3,7 @@ import {
   BaseEntity,
   Column,
   Entity,
+  JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
@@ -10,7 +11,7 @@ import {
 import { Parqueadero } from './parqueadero.entitie';
 import { Vehiculo } from './vehiculo.entitie';
 
-@Entity({ name: 'Historial' })
+@Entity()
 export class Historial extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
@@ -27,9 +28,11 @@ export class Historial extends BaseEntity {
   @ManyToOne(() => Vehiculo, (vehiculo) => vehiculo.historial, {
     eager: true,
   })
+  @JoinColumn({ name: 'placa_vehiculo', referencedColumnName: 'placa' })
   vehiculo: Vehiculo;
 
   @ManyToOne(() => Parqueadero, (parqueadero) => parqueadero.historial)
+  @JoinColumn([{ name: 'parqueadero_id', referencedColumnName: 'id' }])
   parqueadero: Parqueadero;
 
   // constructor(

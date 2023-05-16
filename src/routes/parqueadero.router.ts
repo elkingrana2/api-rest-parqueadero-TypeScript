@@ -115,7 +115,7 @@ router.get(
 );
 
 router.get(
-  '/socio/vehiculos',
+  '/socios/vehiculos-todos',
   passport.authenticate('jwt', { session: false }),
   checkRoles(Rol.empleado),
   listadoVehiculosParqueaderos
