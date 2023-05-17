@@ -23,13 +23,13 @@ export class Vehiculo extends BaseEntity {
   color: string;
 
   @Column({ name: 'fecha_ingreso', type: 'timestamp', nullable: true })
-  fechaIngreso: Date | null;
+  fechaIngreso?: Date | null;
 
   @Column({ name: 'fecha_salida', type: 'timestamp', nullable: true })
-  fechaSalida: Date | null;
+  fechaSalida?: Date | null;
 
   @ManyToOne((type) => Parqueadero, (parqueadero) => parqueadero.vehiculos)
-  parqueadero: Parqueadero | null;
+  parqueadero?: Parqueadero | null;
 
   @OneToMany((type) => Historial, (historial) => historial.vehiculo, {
     cascade: true,

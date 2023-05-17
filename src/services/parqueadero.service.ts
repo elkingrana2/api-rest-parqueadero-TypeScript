@@ -278,8 +278,10 @@ class ParqueaderoService {
       );
     }
 
+    //const idPar =
+
     if (vehiculo.parqueadero !== null) {
-      if (vehiculo.parqueadero.id !== idParqueadero) {
+      if (vehiculo.parqueadero?.id !== idParqueadero) {
         throw boom.badRequest(
           'El vehiculo no está registrado en este parqueadero',
           {
@@ -297,7 +299,7 @@ class ParqueaderoService {
     }
 
     const historial = new Historial();
-    historial.fechaIngreso = vehiculo.fechaIngreso;
+    historial.fechaIngreso = vehiculo.fechaIngreso as Date;
     historial.fechaSalida = new Date();
     historial.duracionSegundos = Math.floor(
       (historial.fechaSalida.getTime() - historial.fechaIngreso.getTime()) /
@@ -306,7 +308,7 @@ class ParqueaderoService {
     historial.vehiculo = vehiculo;
     //vehiculo.addHistorial(historial);
     historial.parqueadero = parqueadero;
-    //await historial.save();
+    await historial.save();
 
     console.log(`Asi queda el historial: `, historial);
 
@@ -314,8 +316,9 @@ class ParqueaderoService {
     vehiculo.fechaIngreso = null;
     vehiculo.fechaSalida = historial.fechaSalida;
     parqueadero.espacioDisponible = parqueadero.espacioDisponible + 1;
-    // await vehiculo.save();
-    // await parqueadero.save();
+    console.log(`asi quedo el vehiculo: `, vehiculo);
+    await vehiculo.save();
+    await parqueadero.save();
   }
 
   // listado de vehiculos que estan en el parqueadero
@@ -454,16 +457,18 @@ class ParqueaderoService {
       relations: ['parqueaderos'],
     });
 
-    const correo1 = parqueadero.usuario?.correo;
-    const correo2 = usuarioLoggeado?.correo;
+    if (parqueadero) {
+      const correo1 = parqueadero.usuario?.correo;
+      const correo2 = usuarioLoggeado?.correo;
 
-    if (correo1 !== correo2) {
-      throw boom.forbidden(
-        'El usuario no tiene permisos para ver el detalle del vehiculo',
-        {
-          placa: vehiculo.placa,
-        }
-      );
+      if (correo1 !== correo2) {
+        throw boom.forbidden(
+          'El usuario no tiene permisos para ver el detalle del vehiculo',
+          {
+            placa: vehiculo.placa,
+          }
+        );
+      }
     }
 
     return vehiculo;

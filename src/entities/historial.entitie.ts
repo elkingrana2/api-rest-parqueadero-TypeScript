@@ -16,11 +16,11 @@ export class Historial extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ name: 'fecha_ingreso' })
-  fechaIngreso: Date;
+  @Column({ name: 'fecha_ingreso', type: 'timestamp', nullable: true })
+  fechaIngreso?: Date | null;
 
-  @Column({ name: 'fecha_salida' })
-  fechaSalida: Date;
+  @Column({ name: 'fecha_salida', type: 'timestamp', nullable: true })
+  fechaSalida?: Date | null;
 
   @Column({ name: 'duracion_segundos', nullable: true })
   duracionSegundos: number;
