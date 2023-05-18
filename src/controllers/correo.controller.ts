@@ -15,18 +15,18 @@ export const enviarCorreo = async (
   next: NextFunction
 ): Promise<Response | void> => {
   try {
-    const { email, mensaje, placa, idParqueadero } = req.body;
+    const { correo, mensaje, placa, idParqueadero } = req.body;
 
-    const correo = new correoDTO();
-    correo.email = email as string;
-    correo.mensaje = mensaje as string;
-    correo.placa = placa as string;
-    correo.idParqueadero = idParqueadero as number;
+    const correoReq = new correoDTO();
+    correoReq.correo = correo;
+    correoReq.mensaje = mensaje;
+    correoReq.placa = placa;
+    correoReq.idParqueadero = idParqueadero;
 
-    await service.enviarCorrreo(correo);
+    const response = await service.enviarCorrreo(correoReq);
     //await service.enviarCorrreo(correo);
 
-    return res.status(200).json({ message: 'correo enviado' });
+    return res.status(200).json(response);
   } catch (error) {
     next(error);
   }

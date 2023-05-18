@@ -23,7 +23,8 @@ export async function post(
 ): Promise<Response | void> {
   try {
     const response = await axios.post(url, body);
-    console.log(`Esta es la respuesta: `, response);
+    //console.log(`Esta es la respuesta: `, response);
+    //console.log(`Esta es la data de la respuesta: `, response.data);
 
     return response.data;
   } catch (error) {

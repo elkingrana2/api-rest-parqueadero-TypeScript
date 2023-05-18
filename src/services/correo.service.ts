@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 /* eslint-disable prettier/prettier */
 import boom from '@hapi/boom';
+import { Response } from 'express';
 
 import config from '../configuration/config';
 import { Vehiculo } from '../entities/vehiculo.entitie';
@@ -10,7 +11,7 @@ import ParqueaderoService from './parqueadero.service';
 
 const service = new ParqueaderoService();
 class CorreoService {
-  async enviarCorrreo(correo: correoDTO): Promise<Response | void> {
+  async enviarCorrreo(correo: correoDTO): Promise<Response> {
     //const ruta = 'correo';
 
     // validar que el parqueadero exista
@@ -31,7 +32,6 @@ class CorreoService {
       });
     }
 
-    console.log(`Este es el vehiculo: `, vehiculo);
     if (vehiculo.parqueadero?.id !== correo.idParqueadero) {
       throw boom.notFound('El vehiculo no se encuentra en el parqueadero', {
         placa: correo.placa,
@@ -45,8 +45,16 @@ class CorreoService {
         'Content-Type': 'application/json',
       },
     };
-    const response = post(`${url}`, body);
-    //console.log(`Esta es la respuesta: `, response);
+    const response = await post(`${url}`, body);
+    console.log(`Esta es la respuesta: `, response);
+
+    if (!response) {
+      throw boom.notFound('No se pudo enviar el correo', {
+        placa: correo.placa,
+      });
+    }
+
+    return response as unknown as Response;
   }
 }
 

@@ -1,6 +1,6 @@
 /* eslint-disable prettier/prettier */
 export class correoDTO {
-  email: string;
+  correo: string;
   mensaje: string;
   placa: string;
   idParqueadero: number;
