@@ -76,7 +76,9 @@ export const deleteParqueadero = async (
   try {
     const id = parseInt(req.params.id);
     await service.deleteParqueadero(id);
-    return res.status(200).json(`Parqueadero ${id} eliminado exitosamente`);
+    return res
+      .status(200)
+      .json({ messaje: `Parqueadero ${id} eliminado exitosamente` });
   } catch (error) {
     console.log(error);
     next(error);

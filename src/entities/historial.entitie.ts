@@ -34,20 +34,4 @@ export class Historial extends BaseEntity {
   @ManyToOne(() => Parqueadero, (parqueadero) => parqueadero.historial)
   @JoinColumn([{ name: 'parqueadero_id', referencedColumnName: 'id' }])
   parqueadero: Parqueadero;
-
-  // constructor(
-  //   id: number,
-  //   fechaIngreso: Date,
-  //   fechaSalida: Date,
-  //   duracionSegundos: number,
-  //   vehiculo: Vehiculo,
-  //   parqueadero: Parqueadero
-  // ) {
-  //   this.id = id;
-  //   this.fechaIngreso = fechaIngreso;
-  //   this.fechaSalida = fechaSalida;
-  //   this.duracionSegundos = duracionSegundos;
-  //   this.vehiculo = vehiculo;
-  //   this.parqueadero = parqueadero;
-  // }
 }

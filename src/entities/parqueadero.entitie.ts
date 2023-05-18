@@ -32,10 +32,7 @@ export class Parqueadero extends BaseEntity {
   @ManyToOne(() => Usuario, (usuario) => usuario.parqueaderos)
   usuario: Usuario | null;
 
-  @OneToMany(() => Vehiculo, (vehiculo) => vehiculo.parqueadero, {
-    cascade: true,
-    onDelete: 'CASCADE',
-  })
+  @OneToMany(() => Vehiculo, (vehiculo) => vehiculo.parqueadero)
   vehiculos: Vehiculo[];
 
   @OneToMany(() => Historial, (historial) => historial.parqueadero)

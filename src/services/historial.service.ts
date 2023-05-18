@@ -1,7 +1,27 @@
+/* eslint-disable no-console */
 /* eslint-disable prettier/prettier */
-import { getRepository } from 'typeorm';
+import { getConnection, getRepository } from 'typeorm';
 
 import { Historial } from '../entities/historial.entitie';
+
+class HistorialService {
+  async getTop10PlacasVehiculos(): Promise<Response | void> {
+    // const historial = await Historial.find({
+    //   where: { id: 1 },
+    // })
+    console.log(`ACA LLEGA`);
+    const queryResult = await getConnection()
+      .createQueryBuilder()
+      .select('placa_vehiculo, COUNT(*) as veces_registrado')
+      .from(Historial, 'historial')
+      .groupBy('placa_vehiculo')
+      .orderBy('veces_registrado', 'DESC')
+      .limit(10)
+      .getRawMany();
+
+    console.log(`Esto trajo la consulta`, queryResult);
+  }
+}
 
 interface Top10PlacasVehiculos {
   placa: string;
@@ -30,3 +50,5 @@ export const getTop10PlacasVehiculos = async (): Promise<
 
 //   return parqueadero;
 // }
+
+export default HistorialService;

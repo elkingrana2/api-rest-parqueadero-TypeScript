@@ -244,7 +244,15 @@ class ParqueaderoService {
     placa: string,
     usuario: Usuario
   ): Promise<Vehiculo | void> {
-    const parqueadero = await this.getParqueaderoById(idParqueadero);
+    const parqueadero = await Parqueadero.findOne({
+      where: { id: idParqueadero },
+    });
+
+    if (!parqueadero) {
+      throw boom.badRequest('Parqueadero no encontrado', {
+        idParqueadero,
+      });
+    }
 
     const permiso = await this.verificarPermisoEmpleado(idParqueadero, usuario);
 
