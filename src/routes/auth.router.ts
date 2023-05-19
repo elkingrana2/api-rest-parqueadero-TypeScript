@@ -9,25 +9,10 @@ import * as auth from '../controllers/auth.controller';
 
 import {} from '../lib/veryfyToken';
 
-import passport from 'passport';
-
 const router = Router();
 
 router.post('/login', auth.signin);
 router.get('/profile', auth.profile);
-
-// rutas de autenticacion
-router.post(
-  '/logan',
-  passport.authenticate('jwt', { session: false }),
-  (req, res, next) => {
-    try {
-      res.json(req.user);
-    } catch (error) {
-      next(error);
-    }
-  }
-);
 
 export default router;
 

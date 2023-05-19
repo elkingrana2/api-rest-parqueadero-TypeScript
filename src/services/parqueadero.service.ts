@@ -174,11 +174,8 @@ class ParqueaderoService {
     const permiso = await this.verificarPermisoEmpleado(idParqueadero, usuario);
 
     if (!permiso) {
-      throw boom.badRequest(
-        'El usuario no tiene permisos para ingresar vehiculos en este parqueadero',
-        {
-          idParqueadero,
-        }
+      throw boom.forbidden(
+        'El usuario no tiene permisos para ingresar vehiculos en este parqueadero'
       );
     }
 
@@ -257,11 +254,8 @@ class ParqueaderoService {
     const permiso = await this.verificarPermisoEmpleado(idParqueadero, usuario);
 
     if (!permiso) {
-      throw boom.badRequest(
-        'El usuario no tiene permisos para registrar salidas de vehiculos en este parqueadero',
-        {
-          idParqueadero,
-        }
+      throw boom.forbidden(
+        'El usuario no tiene permisos para registrar salidas de vehiculos en este parqueadero'
       );
     }
 
@@ -318,13 +312,13 @@ class ParqueaderoService {
     historial.parqueadero = parqueadero;
     await historial.save();
 
-    console.log(`Asi queda el historial: `, historial);
+    //console.log(`Asi queda el historial: `, historial);
 
     vehiculo.parqueadero = null;
     vehiculo.fechaIngreso = null;
     vehiculo.fechaSalida = historial.fechaSalida;
     parqueadero.espacioDisponible = parqueadero.espacioDisponible + 1;
-    console.log(`asi quedo el vehiculo: `, vehiculo);
+    //console.log(`asi quedo el vehiculo: `, vehiculo);
     await vehiculo.save();
     await parqueadero.save();
   }
@@ -521,7 +515,7 @@ class ParqueaderoService {
     )) as Parqueadero[];
 
     const vehiculos: Vehiculo[] = [];
-    console.log(`ESTO TIENE PARQUEADEROS: `, parqueaderos);
+    //console.log(`ESTO TIENE PARQUEADEROS: `, parqueaderos);
 
     const promises = parqueaderos.map((parqueadero) =>
       this.getVehiculosEnParqueadero(parqueadero.id, usuario)

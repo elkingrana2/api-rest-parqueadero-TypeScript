@@ -50,7 +50,7 @@ export function checkRoles(...roles: Rol[]) {
       next();
     } else {
       const mensaje = `El rol ${rol} no tiene permisos para realizar esta acción`;
-      next(boom.unauthorized(mensaje));
+      next(boom.forbidden(mensaje));
     }
   };
 }

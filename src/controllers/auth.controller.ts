@@ -21,14 +21,14 @@ export const signin = async (
     const { correo, password } = req.body;
     const findUser = await service.findUsuarioByCorreo(correo);
     if (!findUser) {
-      res.status(400).json({ message: 'Usuario no encontrado' });
+      res.status(401).json({ message: 'Usuario no encontrado' });
 
       return;
     }
     const uth = await validatePassword(password, findUser.password);
 
     if (!uth) {
-      res.status(400).json({ message: 'Contraseña Incorrecta' });
+      res.status(401).json({ message: 'Contraseña Incorrecta' });
     }
 
     const user = findUser;
