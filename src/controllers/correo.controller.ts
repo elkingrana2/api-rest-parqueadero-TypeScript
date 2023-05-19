@@ -31,3 +31,21 @@ export const enviarCorreo = async (
     next(error);
   }
 };
+
+// optener las solicitudes de la otra api
+// eslint-disable-next-line @typescript-eslint/require-await
+export const getSolicitudes = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  try {
+    const response = await service.getSolicitudes();
+
+    return res.status(200).json(response);
+  } catch (error) {
+    next(error);
+  }
+}
+
+

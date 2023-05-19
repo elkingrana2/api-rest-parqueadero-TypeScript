@@ -6,7 +6,7 @@ import { Response } from 'express';
 import config from '../configuration/config';
 import { Vehiculo } from '../entities/vehiculo.entitie';
 import { correoDTO } from '../responses/correo-dto';
-import { post } from '../utils/httpClient.service';
+import { get,post } from '../utils/httpClient.service';
 import ParqueaderoService from './parqueadero.service';
 
 const service = new ParqueaderoService();
@@ -45,14 +45,27 @@ class CorreoService {
         'Content-Type': 'application/json',
       },
     };
-    const response = await post(`${url}`, body);
-    console.log(`Esta es la respuesta: `, response);
+    const response = await post(`${url}/send`, body);
+    //console.log(`Esta es la respuesta: `, response);
 
     if (!response) {
       throw boom.notFound('No se pudo enviar el correo', {
         placa: correo.placa,
       });
     }
+
+    return response as unknown as Response;
+  }
+
+  // optener las solicitudes de la otra api
+  async getSolicitudes(): Promise<Response> {
+    const url = config.servicioCorreo as string;
+    const response = await get(`${url}/solicitudes`);
+    //console.log(`Esta es la respuesta: `, response);
+
+    // if (!response) {
+    //   throw boom.notFound('No se pudo obtener las solicitudes');
+    // }
 
     return response as unknown as Response;
   }

@@ -8,6 +8,10 @@ interface ApiResponse<T> {
   error: AxiosError | null;
 }
 
+interface ApiResponse2<T> {
+  data: T | null;
+}
+
 interface ResponseData {
   // Definir la estructura de datos de la respuesta
   email: string;
@@ -28,6 +32,20 @@ export async function post(
 
     return response.data;
   } catch (error) {
+    //console.log(`ACA LLEGO`);
     console.log(error);
+  }
+}
+
+export async function get<T>(
+  url: string
+): Promise<ApiResponse<T> | ApiResponse2<T>> {
+  try {
+    const response = await axios.get<T>(url);
+    console.log(`Esta es la respuesta: `, response);
+
+    return { data: response.data };
+  } catch (error) {
+    return { data: null, error: error as AxiosError };
   }
 }
