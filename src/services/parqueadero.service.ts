@@ -7,7 +7,13 @@ import { Historial } from '../entities/historial.entitie';
 import { Parqueadero } from '../entities/parqueadero.entitie';
 import { Rol, Usuario } from '../entities/Usuario.entitie';
 import { Vehiculo } from '../entities/vehiculo.entitie';
+import ParqueaderoRepository from '../repository/parqueadero.repository';
+import UsuarioRepository from '../repository/usuario.repository';
+import VehiculoRepository from '../repository/vehiculo.repository';
 
+const parqueaderoRepository = new ParqueaderoRepository();
+const vehiculoRepository = new VehiculoRepository();
+const usuarioRepository = new UsuarioRepository();
 class ParqueaderoService {
   constructor() {
     const parqueadero = new Parqueadero();
@@ -15,22 +21,19 @@ class ParqueaderoService {
   }
 
   async getParqueaderos(): Promise<Parqueadero[]> {
-    const parqueadero = Parqueadero.find();
+    const parqueadero = await parqueaderoRepository.getParqueaderos();
 
     return parqueadero;
   }
 
   async getParqueaderoById(idParqueadero: number): Promise<Parqueadero> {
-    const parqueadero = await Parqueadero.findOne({
-      where: { id: idParqueadero },
-      relations: ['usuario', 'vehiculos'],
-      // traer tambien el historial que esta en la tabla vehiculo
-    });
-    //const parqueadero = await Parqueadero.findOneBy({ id: idParqueadero });
+    const parqueadero = await parqueaderoRepository.getParqueaderoById(
+      idParqueadero
+    );
+
     if (!parqueadero) {
       throw boom.notFound('Parqueadero no encontrado', { idParqueadero });
     }
-    //parqueadero.vehiculos = [];
 
     return parqueadero;
   }
@@ -169,8 +172,12 @@ class ParqueaderoService {
     color: string,
     usuario: Usuario
   ): Promise<Parqueadero | void> {
-    const parqueadero = await this.getParqueaderoById(idParqueadero);
-
+    const parqueadero = await parqueaderoRepository.getParqueadero(
+      idParqueadero
+    );
+    if (!parqueadero) {
+      throw boom.notFound('Parqueadero no encontrado', { idParqueadero });
+    }
     const permiso = await this.verificarPermisoEmpleado(idParqueadero, usuario);
 
     if (!permiso) {
@@ -197,10 +204,9 @@ class ParqueaderoService {
     }
 
     // si el vehiculo ya existe, no se puede ingresar
-    const vehiculoExistente = await Vehiculo.findOne({
-      where: { placa },
-      relations: ['parqueadero'],
-    });
+    const vehiculoExistente = await vehiculoRepository.findVehiculoByPlaca(
+      placa
+    );
     if (vehiculoExistente && vehiculoExistente.fechaSalida === null) {
       throw boom.badRequest('Ya existe la placa', {
         placa,
@@ -216,7 +222,6 @@ class ParqueaderoService {
       vehiculoExistente.modelo = modelo;
       vehiculoExistente.color = color;
       vehiculoExistente.parqueadero = parqueadero;
-      //parqueadero.addVehiculo(vehiculoExistente);
       await parqueadero.save();
 
       await vehiculoExistente.save();
@@ -230,7 +235,6 @@ class ParqueaderoService {
       vehiculo.color = color;
       vehiculo.parqueadero = parqueadero;
       vehiculo.historial = [];
-      //parqueadero.addVehiculo(vehiculo);
       await parqueadero.save();
       await vehiculo.save();
     }
@@ -259,13 +263,8 @@ class ParqueaderoService {
       );
     }
 
-    const vehiculo = await Vehiculo.findOne({
-      where: { placa },
-      relations: ['parqueadero'],
-    });
+    const vehiculo = await vehiculoRepository.findVehiculoByPlaca(placa);
 
-    //console.log(`ESTO TIENE PARQUEADERO: `, parqueadero);
-    console.log(`ESTO TIENE VEHICULO: `, vehiculo);
     if (!vehiculo) {
       throw boom.notFound('Vehiculo no encontrado', { placa });
     }
@@ -279,8 +278,6 @@ class ParqueaderoService {
         }
       );
     }
-
-    //const idPar =
 
     if (vehiculo.parqueadero !== null) {
       if (vehiculo.parqueadero?.id !== idParqueadero) {
@@ -329,11 +326,9 @@ class ParqueaderoService {
     usuario: Usuario
   ): Promise<Vehiculo[] | void> {
     //const parqueadero = await this.getParqueaderoById(idParqueadero);
-    const parqueadero = await Parqueadero.findOne({
-      where: { id: idParqueadero },
-      relations: ['usuario', 'vehiculos', 'vehiculos.historial'],
-      // traer tambien el historial que esta en la tabla vehiculo
-    });
+    const parqueadero = await parqueaderoRepository.getVehiculosParqueadero(
+      idParqueadero
+    );
 
     if (!parqueadero) {
       throw boom.notFound('Parqueadero no encontrado', { idParqueadero });
@@ -367,11 +362,9 @@ class ParqueaderoService {
     idParqueadero: number,
     usuario: Usuario
   ): Promise<Vehiculo[] | void> {
-    const parqueadero = await Parqueadero.findOne({
-      where: { id: idParqueadero },
-      relations: ['usuario', 'vehiculos', 'vehiculos.historial'],
-      // traer tambien el historial que esta en la tabla vehiculo
-    });
+    const parqueadero = await parqueaderoRepository.getVehiculosParqueadero(
+      idParqueadero
+    );
 
     if (!parqueadero) {
       throw boom.notFound('Parqueadero no encontrado', { idParqueadero });
@@ -414,10 +407,7 @@ class ParqueaderoService {
     placa: string,
     usuario: Usuario
   ): Promise<Vehiculo | void> {
-    const vehiculo = await Vehiculo.findOne({
-      where: { placa },
-      relations: ['historial', 'parqueadero.usuario'],
-    });
+    const vehiculo = await vehiculoRepository.getDetalleVehiculo(placa);
 
     if (!vehiculo) {
       throw boom.notFound('Vehiculo no encontrado', { placa });
@@ -428,10 +418,7 @@ class ParqueaderoService {
     }
 
     if (usuario.rol === Rol.empleado) {
-      const empleado = await Usuario.findOne({
-        where: { id: usuario.id },
-        relations: ['jefe'],
-      });
+      const empleado = await usuarioRepository.getUsuarioById(usuario.id);
 
       const jefe = empleado?.jefe as Usuario;
 

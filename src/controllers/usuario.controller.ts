@@ -187,20 +187,3 @@ export const agregarParqueaderoSocio = async (
     next(error);
   }
 };
-
-// buscar un usuario por id y rol
-export const getUsuarioByIdAndRol = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<Response | void> => {
-  try {
-    const id = parseInt(req.params.id);
-    const { rol } = req.body;
-
-    const usuario = await service.findUsuarioByIdAndRol(id, rol as Rol);
-    return res.status(200).json({ usuario });
-  } catch (error) {
-    next(error);
-  }
-};

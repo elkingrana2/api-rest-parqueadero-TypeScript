@@ -8,16 +8,18 @@
 import { Usuario, Rol } from '../entities/Usuario.entitie';
 
 import * as bcrypt from 'bcrypt';
-
+import UsuarioRepository from '../repository/usuario.repository';
+import ParqueaderoRepository from '../repository/parqueadero.repository';
 import { Request } from 'express';
 
 import boom from '@hapi/boom';
 //import { DataSource } from 'typeorm';
 
 import ParqueaderoService from './parqueadero.service';
-import { Parqueadero } from '../entities/parqueadero.entitie';
 
 const parqueaderoService = new ParqueaderoService();
+const usuarioRepository = new UsuarioRepository();
+const parqueaderoRepository = new ParqueaderoRepository();
 
 class UsuariosService {
   // constructor() {
@@ -26,42 +28,14 @@ class UsuariosService {
   // }
 
   async getUsuarios(): Promise<Usuario[]> {
-    const usuario = Usuario.find();
+    const usuario = usuarioRepository.getUsuarios();
 
     return usuario;
   }
 
   async getUsuarioById(idUsuario: number): Promise<Usuario> {
-    const usuario = await Usuario.findOne({
-      where: { id: idUsuario },
-      relations: ['jefe'],
-    });
+    const usuario = await usuarioRepository.getUsuarioById(idUsuario);
     //const usuario = await Usuario.findOneBy({ id: idUsuario });
-    if (!usuario) {
-      throw boom.notFound('Usuario no encontrado', { idUsuario });
-    }
-
-    return usuario;
-  }
-
-  async findUsuarioByCorreo(correo: string): Promise<Usuario | null> {
-    // optener el password del usuario
-    const usuario = await Usuario.findOne({
-      where: { correo },
-    });
-
-    return usuario;
-  }
-
-  // buscar un usuario por id y rol
-  async findUsuarioByIdAndRol(
-    idUsuario: number,
-    rol: Rol
-  ): Promise<Usuario | null> {
-    const usuario = await Usuario.findOne({
-      where: { id: idUsuario, rol },
-    });
-
     if (!usuario) {
       throw boom.notFound('Usuario no encontrado', { idUsuario });
     }
@@ -128,25 +102,10 @@ class UsuariosService {
       );
     }
 
-    // // verificar si ese parqueadero ya esta asignado al usuario
-    // if (parqueadero.usuario === usuario) {
-    //   throw boom.badRequest('El parqueadero ya esta asignado al usuario', {
-    //     idUsuario,
-    //   });
-    // }
-
-    // //verificar si el parqueadero ya esta asignado a otro usuario
-    // if (parqueadero.usuario != null) {
-    //   throw boom.badRequest('El parqueadero ya esta asignado a otro usuario', {
-    //     idUsuario,
-    //   });
-    // }
-
-    const parqueadero1 = await Parqueadero.findOne({
-      where: { id: idParqueadero },
-      relations: ['usuario'],
-    });
-    console.log(`Este es el parqueadero: `, parqueadero1);
+    const parqueadero1 = await parqueaderoRepository.getParqueadero(
+      idParqueadero
+    );
+    //console.log(`Este es el parqueadero: `, parqueadero1);
     if (parqueadero1?.usuario !== null) {
       // el parqueadero ya está asociado a un usuario
       throw boom.badRequest('El parqueadero ya esta asignado a otro usuario', {
@@ -156,16 +115,6 @@ class UsuariosService {
 
     parqueadero.usuario = usuario;
     await parqueadero.save();
-    //parqueadero.vehiculos = [];
-
-    //usuario.parqueaderos.push(parqueadero);
-    //console.log(`Este es el usuario: `, usuario);
-    //console.log(`parqueaderos del socio: `, usuario.parqueaderos.length);
-
-    //usuario.addParqueadero(parqueadero);
-    //console.log(`Este es el usuario: `, usuario);
-    //console.log(`parqueaderos del socio: `, usuario.parqueaderos.length);
-    //await usuario.save();
   }
 
   // Socio crea usuario con el rol de empleado
@@ -194,6 +143,12 @@ class UsuariosService {
     await usuarioNuevo.save();
 
     return usuarioNuevo;
+  }
+
+  async findUsuarioByCorreo(correo: string): Promise<Usuario | null> {
+    const usuario = await usuarioRepository.findUsuarioByCorreo(correo);
+
+    return usuario;
   }
 }
 

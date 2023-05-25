@@ -19,7 +19,7 @@ export const signin = async (
 ) => {
   try {
     const { correo, password } = req.body;
-    const findUser = await service.findUsuarioByCorreo(correo);
+    const findUser = await service.findUsuarioByCorreo(correo as string);
     if (!findUser) {
       res.status(401).json({ message: 'Usuario no encontrado' });
 
